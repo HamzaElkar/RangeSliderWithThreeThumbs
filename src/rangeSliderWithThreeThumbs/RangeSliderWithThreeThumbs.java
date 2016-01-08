@@ -14,6 +14,9 @@ import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Ellipse2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import javax.swing.JComponent;
 import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
@@ -37,16 +40,21 @@ public class RangeSliderWithThreeThumbs extends JSlider {
 
     private int secondUpperValue;
     private int secondUpperExtent;
+    private PropertyChangeSupport pChangeSup;
 
     /**
      * Constructs a RangeSlider with default minimum and maximum values of 0 and
      * 100.
      */
     public RangeSliderWithThreeThumbs() {
+        pChangeSup = new PropertyChangeSupport(this);
+        addSeconUpperPropertyChangeListener(new SecondUpperListener());
+
         initSlider();
         this.setValue(40);
         this.setUpperValue(60);
         this.setSecondUpperValue(70);
+
     }
 
     /**
@@ -129,12 +137,17 @@ public class RangeSliderWithThreeThumbs extends JSlider {
 
     //Sets the second UpperValue value in the range.
     public void setSecondUpperValue(int value) {
-
+        int oldValue = this.secondUpperValue;
         this.secondUpperValue = value;
 
         secondUpperExtent = getSecondUpperValue() - getUpperValue();
 
         setSecondUpperExtent(secondUpperExtent);
+        pChangeSup.firePropertyChange("secondUpperValue", oldValue, value);
+    }
+
+    public void addSeconUpperPropertyChangeListener(PropertyChangeListener listener) {
+        pChangeSup.addPropertyChangeListener(listener);
     }
 
     public int getSecondUpperValue() {
@@ -148,6 +161,17 @@ public class RangeSliderWithThreeThumbs extends JSlider {
 
     public int getSecondUpperExtent() {
         return secondUpperExtent;
+    }
+
+    //Listener for secondUpperValue
+    public class SecondUpperListener implements PropertyChangeListener {
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (evt.getPropertyName().equals("secondUpperValue")) {
+                setSecondUpperValue((int) evt.getNewValue());
+            }
+        }
     }
 
     /**
@@ -720,6 +744,7 @@ public class RangeSliderWithThreeThumbs extends JSlider {
                 }
                 upperDragging = false;
 
+                // Handle secondUpper thumb pressed.
                 if (secondUpperPressed) {
                     switch (slider.getOrientation()) {
                         case JSlider.VERTICAL:
