@@ -17,6 +17,8 @@ import java.awt.geom.Ellipse2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.Arrays;
+import java.util.Collections;
 import javax.swing.JComponent;
 import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
@@ -53,7 +55,7 @@ public class RangeSliderWithThreeThumbs extends JSlider {
         initSlider();
         this.setValue(40);
         this.setUpperValue(60);
-        this.setSecondUpperValue(70);
+        this.setSecondUpperValue(80);
 
     }
 
@@ -66,7 +68,7 @@ public class RangeSliderWithThreeThumbs extends JSlider {
         initSlider();
         this.setValue(40);
         this.setUpperValue(60);
-        this.setSecondUpperValue(70);
+        this.setSecondUpperValue(80);
     }
 
     /**
@@ -640,31 +642,37 @@ public class RangeSliderWithThreeThumbs extends JSlider {
          */
         public class RangeTrackListener extends BasicSliderUI.TrackListener {
 
-//            @Override
-//            public void mouseClicked(MouseEvent e) {
-//                jumpToClickedPosition(slider, e);
-//            }
-//
-//            public void jumpToClickedPosition(JSlider jSlider, MouseEvent evt) {
-//                BasicSliderUI ui = (BasicSliderUI) jSlider.getUI();
-//                int pos = ui.valueForXPosition(evt.getPoint().x);
-//
-//                int minValue = slider.getValue();
-//                int maxValue = slider.getValue() + slider.getExtent();
-//
-//                if (pos < minValue) {
-//                    moveLowerThumb();
-//                } else if (pos > maxValue) {
-//                    moveUpperThumb();
-//                } else if (pos > minValue && pos < maxValue) {
-//                    if (pos > 50) {
-//                        moveUpperThumb();
-//                    } else {
-//                        moveLowerThumb();
-//                    }
-//                }
-//
-//            }
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                jumpToClickedPosition(slider, e);
+                calculateThumbLocation();
+
+            }
+
+            public void jumpToClickedPosition(JSlider jSlider, MouseEvent evt) {
+                BasicSliderUI ui = (BasicSliderUI) jSlider.getUI();
+                int pos = ui.valueForXPosition(evt.getPoint().x);
+
+                int minValue = slider.getValue();
+                int maxValue = slider.getValue() + slider.getExtent();
+                int getSecondUpperValue = getSecondUpperValue();
+
+                int lowerThumbDistance = Math.abs(minValue - pos);
+                int upperThumbDistance = Math.abs(maxValue - pos);
+                int secondUpperThumbDistance = Math.abs(getSecondUpperValue - pos);
+
+                int min = Collections.min(Arrays.asList(lowerThumbDistance, upperThumbDistance, secondUpperThumbDistance));
+
+                if (min == lowerThumbDistance) {
+                    moveLowerThumb();
+                } else if (min == upperThumbDistance) {
+                    moveUpperThumb();
+                } else if (min == secondUpperThumbDistance) {
+                    moveSecondUpperThumb();
+                }
+
+            }
+
             @Override
             public void mousePressed(MouseEvent e) {
                 if (!slider.isEnabled()) {
@@ -911,13 +919,13 @@ public class RangeSliderWithThreeThumbs extends JSlider {
                         // Update slider extent.
                         thumbMiddle = thumbLeft + halfThumbWidth;
                         slider.setExtent(valueForXPosition(thumbMiddle) - slider.getValue());
-                        if (getUpperValue() + getSecondUpperExtent() > getMaximum()) {
-                            setSecondUpperExtent(getSecondUpperValue() - valueForXPosition(thumbMiddle));
-                            setSecondUpperValue(getMaximum());
-                        } else {
+//                        if (getUpperValue() + getSecondUpperExtent() > getMaximum()) {
+//                            setSecondUpperExtent(getSecondUpperValue() - valueForXPosition(thumbMiddle));
+//                            setSecondUpperValue(getMaximum());
+//                        } else {
                             setSecondUpperExtent(getSecondUpperValue() - valueForXPosition(thumbMiddle));
                             setSecondUpperValue(getUpperValue() + getSecondUpperExtent());
-                        }
+//                        }
                         break;
 
                     default:
